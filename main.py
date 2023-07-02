@@ -20,6 +20,9 @@ THANK YOU FOR USING MY PROGRAMM AND BEING AWSOME!"""
 
 try:
     from win32com import client
+    import pywintypes
+    import tkinter
+    import time
     import json
 except ModuleNotFoundError:
     print("You are missing some modules.")
@@ -30,7 +33,6 @@ except ModuleNotFoundError:
 
 class DataCtrl:
     """Edit, Read and Save things like variables, files and so on."""
-
     class Clean:
         """Cleanses the confusing text from the terminal for
         better overview. You are welcome..."""
@@ -41,24 +43,15 @@ class DataCtrl:
 
     class Json:
         """Create/Update/Delet/Read json files."""
-        def __init__(self,path:str="config.json",decoding:str="utf-8") -> None:
-            self.path = path
-            # The path to the settings/configuration.
-
-            self.decoding = decoding
-            # The encoding of strings in a json file (like utf-8, ascii).
-
-        def read_json(self) -> dict:
+        def read_json(path:str="config.json",decoding:str="utf-8") -> dict:
             """Returns the content of a json file as a dict."""
-            return json.loads(open(str(self.path),encoding=self.decoding).read())
+            return json.loads(open(str(path),encoding=decoding).read())
             # First, the file is opend, after that it is converted into a string
             # and at last the string is turned into a dict.
 
 
 class XlsxEditing:
     """Editing and converting XLSX files."""
-    settings = DataCtrl.Json()
-    settings.read_json()["convert"]
     def __init__(self, name: str = "example") -> None:
         self.name = name
         # The name of the currently used excel file (without file extension).
@@ -69,47 +62,83 @@ class XlsxEditing:
         self.app = client.DispatchEx("Excel.Application")
         # Setup the programm to open excel files.
 
-        self.app.Interactive = False
+        self.app.Interactive = True
         # I guess this indicates if the excel file is editable.
 
         self.app.Visible = False
-        # Honestly i have no idea.
+        # Open the Microsoft Excel Window when opend.
+
+        self.insert = f"{DataCtrl.Json.read_json()['convert']['input_path']}{self.name}"
+        # The default path to the xlsx file.
+
+        self.output = f"{DataCtrl.Json.read_json()['convert']['output_path']}{self.name}"
+        # The default path to the pdf file, if converted to pdf.
+
+        self.workbook = self.app.Workbooks.Open(self.insert)
+        # Opens the workbook to work with.
+
+        self.status = True
+        # The current status of the workbook.
+
+        self.worksheet = self.workbook.Worksheets('Sheet1')
+        # The opend sheet to work with.
+
+
+    def open_close(self,boot:bool=True) -> None:
+        """Open or close this excel-file. By default, the 
+        workbook is opened when defined.
+        True = Open; False = Close"""
+        if boot:
+            self.workbook = self.app.Workbooks.Open(self.insert)
+            self.status = True
+            # Opens the workbook to work with.
+
+        else:
+            self.workbook.Close()
+            self.status = False
+            # Closes the workbook.
+
+
+    def save(self) -> None:
+        """Save the current changes."""
+
+
     def to_pdf(self) -> bool:
         """First a the workbook is open, after that the file 
         is exported as a pdf and at last the workbook is closed.
         You should save the file first before converting."""
 
-        insert = f"C:\\Users\\VW6F8P7\\Documents\\excel converter\\input\\{self.name}"
-        # The default path to the xlsx file.
-
-        output = f"C:\\Users\\VW6F8P7\\Documents\\excel converter\\output\\{self.name}"
-        # The default path to the pdf file.
 
         print("Converting into PDF, Please wait...")
 
         try:
-            print(f"Opening workbook: '{insert}'")
-            workbook = self.app.Workbooks.Open(insert)
-            # Opens the workbook to work with.
-
-            print(f"Exporting: '{output}'")
-            workbook.ActiveSheet.ExportAsFixedFormat(0, output)
+            print(f"Exporting: '{self.output}'")
+            self.workbook.ActiveSheet.ExportAsFixedFormat(0, self.output)
             # Saves the workbook as a given format (like PDF).
-
-            print(f"Closing workbook: {self.name}")
-            workbook.Close()
-            # Closes the workbook.
-
 
             print(f"Converted {self.name}.xlsx into {self.name}.pdf")
             return True
-        except:  # Unfortunately, I have no idea what the argument is called for this type of error.
+
+        except pywintypes.com_error:
+            # Unfortunately, I have no idea what the argument is called for this error.
+
+            print("File could not be found. Make sure the file-path is correct.")
+            print(f"Input > {self.insert}")
+            print(f"Output > {self.output}")
             return False
+
+
+    def edit_value(self) -> None:
+        """Simply edits the value in a given cell."""
+        self.worksheet.Cells(2,2).Value = "test"
+
+        self.workbook.Save()
 
 
 
 
 if __name__ in "__main__":
     DataCtrl.Clean()
-    XlsxEditing("kopf")
-    print(DataCtrl.Json())
+    base = XlsxEditing("kopf")
+    base.edit_value()
+    base.to_pdf()
