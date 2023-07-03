@@ -10,37 +10,29 @@ EDIT/SAVE/CONVERT FILES ONLY IF THE FILE IS IN THE SAME
 FOLDER AS THE MAIN PROGRAMM BUT I DO NOT RECOMMEND TO CHANGE
 ANYTHING. THE SETTING ARE NOT MEANT TO BE CHANGED.
 
-THIS ONLY WORKS WITH THE WINDOWS OS AND YOU MIGHT NEED TO
-FIRST INSTALL some . I HAVE CREATED A BATCH FILE WHICH
-WILL DO  
-
-PLEASE PROVIDE ME WITH FEEDBACK AND ERROR REPORTS!
-THANK YOU FOR USING MY PROGRAMM AND BEING AWSOME!"""
+IF YOU FIND ANY BUGS OR ANYTHING. PLEASE LET ME KNOW"""
 
 
+
+
+import os
 try:
+    import tkinter
+    from tkinter import ttk
     from win32com import client
     import pywintypes
-    import tkinter
-    import time
     import json
+    import time
 except ModuleNotFoundError:
-    print("You are missing some modules.")
-    print("Please run the batch file in the main folder.")
-
-
+    os.system("cmd /c pip install pywin32")
+    os.system("cmd /c pip install tk")
+    print("Restart the programm.")
+for i in range(0,100):
+    print(" ")
 
 
 class DataCtrl:
     """Edit, Read and Save things like variables, files and so on."""
-    class Clean:
-        """Cleanses the confusing text from the terminal for
-        better overview. You are welcome..."""
-        def __init__(self) -> None:
-            for i in range(0,100):
-                print(" ")
-
-
     class Json:
         """Create/Update/Delet/Read json files."""
         def read_json(path:str="config.json",decoding:str="utf-8") -> dict:
@@ -80,11 +72,11 @@ class XlsxEditing:
         self.status = True
         # The current status of the workbook.
 
-        self.worksheet = self.workbook.Worksheets('Sheet1')
+        self.worksheet = self.workbook.Worksheets('Tabelle1')
         # The opend sheet to work with.
 
 
-    def open_close(self,boot:bool=True) -> None:
+    def open_close(self,boot:bool=True,fully_close:bool=False) -> None:
         """Open or close this excel-file. By default, the 
         workbook is opened when defined.
         True = Open; False = Close"""
@@ -93,20 +85,24 @@ class XlsxEditing:
             self.status = True
             # Opens the workbook to work with.
 
-        else:
+        elif boot is False and fully_close is False:
             self.workbook.Close()
             self.status = False
             # Closes the workbook.
 
-
-    def save(self) -> None:
-        """Save the current changes."""
+        elif fully_close:
+            self.workbook.Close()
+            self.app.Quit()
+            self.status = False
 
 
     def to_pdf(self) -> bool:
         """First a the workbook is open, after that the file 
         is exported as a pdf and at last the workbook is closed.
         You should save the file first before converting."""
+        if not self.status:
+            print("Open Workbook/Excel Application first.")
+            return False
 
 
         print("Converting into PDF, Please wait...")
@@ -122,23 +118,44 @@ class XlsxEditing:
         except pywintypes.com_error:
             # Unfortunately, I have no idea what the argument is called for this error.
 
-            print("File could not be found. Make sure the file-path is correct.")
+            print("File could not be found.")
             print(f"Input > {self.insert}")
             print(f"Output > {self.output}")
             return False
 
 
-    def edit_value(self) -> None:
-        """Simply edits the value in a given cell."""
-        self.worksheet.Cells(2,2).Value = "test"
+    def edit_value(self,new_value:str="Example",
+                   hztl_index:int=1,
+                   vrtc_index:int=1,
+                   save_after:bool=True) -> None:
+        """Simply edits the value in a given cell.
+        hztl_index = Horizontal Index/vrtc_index = vertical"""
+        if not self.status:
+            print("Open Workbook/Excel Application first.")
+            return False
 
-        self.workbook.Save()
+        self.worksheet.Cells(vrtc_index,hztl_index).Value = str(new_value)
+
+        if save_after:
+            self.workbook.Save()
+
 
 
 
 
 if __name__ in "__main__":
-    DataCtrl.Clean()
-    base = XlsxEditing("kopf")
-    base.edit_value()
-    base.to_pdf()
+    win = tkinter.Tk("1")
+    win.title("ZA CHESTA")
+    win.geometry("800x400")
+    win.resizable(False,False)
+
+    lable1 = ttk.Label(win)
+    lable1.pack()
+
+    lable1.configure(text="ZA CHESTA!")
+
+
+    for i in range(0,100):
+        win.update()
+        time.sleep(0.1)
+        lable1.configure(text=str(i))
