@@ -18,14 +18,16 @@ IF YOU FIND ANY BUGS OR ANYTHING. PLEASE LET ME KNOW"""
 import os
 try:
     import tkinter
-    from tkinter import ttk
+    from tkinter import filedialog
     from win32com import client
+    from PIL import Image,ImageTk
     import pywintypes
     import json
     import time
 except ModuleNotFoundError:
     os.system("cmd /c pip install pywin32")
     os.system("cmd /c pip install tk")
+    os.system("cmd /c pip install pillow")
     print("Restart the programm.")
 for i in range(0,100):
     print(" ")
@@ -41,16 +43,9 @@ class DataCtrl:
             # First, the file is opend, after that it is converted into a string
             # and at last the string is turned into a dict.
 
-
 class XlsxEditing:
     """Editing and converting XLSX files."""
-    def __init__(self, name: str = "example") -> None:
-        self.name = name
-        # The name of the currently used excel file (without file extension).
-
-        # Only the name of the file is needed because
-        # by default, the only files in the folder 'input' are used.
-
+    def __init__(self,insert:str="C:\\",output:str="C:\\") -> None:
         self.app = client.DispatchEx("Excel.Application")
         # Setup the programm to open excel files.
 
@@ -60,10 +55,10 @@ class XlsxEditing:
         self.app.Visible = False
         # Open the Microsoft Excel Window when opend.
 
-        self.insert = f"{DataCtrl.Json.read_json()['convert']['input_path']}{self.name}"
+        self.insert = insert
         # The default path to the xlsx file.
 
-        self.output = f"{DataCtrl.Json.read_json()['convert']['output_path']}{self.name}"
+        self.output = output
         # The default path to the pdf file, if converted to pdf.
 
         self.workbook = self.app.Workbooks.Open(self.insert)
@@ -96,7 +91,7 @@ class XlsxEditing:
             self.status = False
 
 
-    def to_pdf(self) -> bool:
+    def to_pdf(self,close_after:bool=True) -> bool:
         """First a the workbook is open, after that the file 
         is exported as a pdf and at last the workbook is closed.
         You should save the file first before converting."""
@@ -112,7 +107,9 @@ class XlsxEditing:
             self.workbook.ActiveSheet.ExportAsFixedFormat(0, self.output)
             # Saves the workbook as a given format (like PDF).
 
-            print(f"Converted {self.name}.xlsx into {self.name}.pdf")
+            print(f"Converted to {self.output}")
+            if close_after:
+                self.open_close(fully_close=True)
             return True
 
         except pywintypes.com_error:
@@ -121,6 +118,8 @@ class XlsxEditing:
             print("File could not be found.")
             print(f"Input > {self.insert}")
             print(f"Output > {self.output}")
+            if close_after:
+                self.open_close(fully_close=True)
             return False
 
 
@@ -141,21 +140,30 @@ class XlsxEditing:
 
 
 
-
-
 if __name__ in "__main__":
-    win = tkinter.Tk("1")
-    win.title("ZA CHESTA")
-    win.geometry("800x400")
-    win.resizable(False,False)
+    def openFile():
+        path = filedialog.askopenfilename()
+        if path is "":
+            print("Process canceled...")
+            return
+        path = path.replace("/", "\\")
+        path_back = filedialog.asksaveasfilename()
+        if path_back is "":
+            print("Process canceled...")
+            return
+        path_back = path_back.replace("/", "\\")
+        print(f"OH YEAH! {path} \nOH YEAH!2 {path_back}")
+        excel = XlsxEditing(insert=path,output=path_back)
+        excel.to_pdf(close_after=True)
 
-    lable1 = ttk.Label(win)
-    lable1.pack()
 
-    lable1.configure(text="ZA CHESTA!")
+    win = tkinter.Tk()
+    win.geometry("200x200")
 
+    bild = Image.open("icon.png").resize((200,200))
+    blatt = ImageTk.PhotoImage(bild)
 
-    for i in range(0,100):
-        win.update()
-        time.sleep(0.1)
-        lable1.configure(text=str(i))
+    button = tkinter.Button(win,image=blatt,command=openFile)
+    button.pack(side="top")
+
+    win.mainloop()
