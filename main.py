@@ -23,7 +23,6 @@ try:
     from PIL import Image,ImageTk
     import pywintypes
     import json
-    import time
 except ModuleNotFoundError:
     os.system("cmd /c pip install pywin32")
     os.system("cmd /c pip install tk")
@@ -139,9 +138,9 @@ class XlsxEditing:
             self.workbook.Save()
 
 
-
 if __name__ in "__main__":
-    def openFile():
+    def open_file():
+        """Test if file is open-able."""
         path = filedialog.askopenfilename()
         if path is "":
             print("Process canceled...")
@@ -163,7 +162,7 @@ if __name__ in "__main__":
     bild = Image.open("icon.png").resize((200,200))
     blatt = ImageTk.PhotoImage(bild)
 
-    button = tkinter.Button(win,image=blatt,command=openFile)
+    button = tkinter.Button(win,image=blatt,command=open_file)
     button.pack(side="top")
 
     win.mainloop()
